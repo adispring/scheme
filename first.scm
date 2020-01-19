@@ -2,13 +2,19 @@
   (lambda (x)
     (and (not (pair? x)) (not (null? x)))))
 
-(define lat?
-  (lambda (l)
-    (cond
-     ((null? l) #t)
-     ((atom? (car l)) (lat? (cdr l)))
-     (else #f))))
+(atom? (quote ()))
+(atom? 'atom)
+(atom? 'turkey)
+(atom? 1492)
+(atom? 'u)
+(atom? '*abc$)
+(atom? '(atom))
+(atom? '(atom turkey or))
 
-(lat? '(abc, (a, b)))
+(pair? '(atom turkey or))
+(pair? '('(atom turkey) or))
+(pair? '())
+(atom? '())
 
-(lat? '(a a))
+(car (car '(((hotdogs)) (and) (pickle) (relish))))
+

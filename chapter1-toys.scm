@@ -64,3 +64,20 @@
 
 (atom? 'Harry)
 (atom? '(Harry had a heap of apples))
+(pair? '(a b))
+(atom? (car '(Harry had a heap of apples)))
+(atom? (cdr '(Harry had a heap of apples)))
+(atom? (cdr '(Harry)))
+(atom? (car (cdr '(swing low sweet cherry oat))))
+(atom? (car (cdr '(swing (low sweet) cherry oat))))
+
+;; eq?
+
+(eq? 'Harry 'Harry)
+(eq? 'margarine 'butter)
+(eq? '() '(strawberry))
+(eq? '(strawberry) '(strawberry))
+(eq? 6 7)
+(eq? (car '(Mary had a little lamb chop)) 'Mary)
+(eq? (cdr '(soured milk)) 'milk)
+(eq? (car '(beans beans we need jelly beans)) (car (cdr '(beans beans we need jelly beans))))

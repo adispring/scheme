@@ -150,19 +150,36 @@
      ((zero? n) 1)
      (else (ox m (o^ m (sub1 n)))))))
 
-
-
 (define 1st-sub-exp
   (lambda (aexp)
     (car (cdr aexp))))
 
-(define 2st-sub-exp
+(define 2nd-sub-exp
   (lambda (aexp)
     (car (cdr (cdr aexp)))))
 
 (define operator
   (lambda (aexp)
     (car aexp)))
+
+(define value-prefix
+  (lambda (nexp)
+    (cond
+     ((atom? nexp) nexp)
+     ((eq? (operator nexp) '+)
+      (o+ (value-prefix (1st-sub-exp nexp))
+          (value-prefix (2nd-sub-exp nexp))))
+     ((eq? (operator nexp) 'x)
+      (ox (value-prefix (1st-sub-exp nexp))
+          (value-prefix (2nd-sub-exp nexp))))
+     ((eq? (operator nexp) '^)
+      (o^ (value-prefix (1st-sub-exp nexp))
+          (value-prefix (2nd-sub-exp nexp))))
+     (else #f))))
+
+(value-prefix '13)
+(value-prefix '(+ 1 3))
+(value-prefix '(+ 1 (^ 3 4)))
 
 (define atom-to-function
   (lambda (x)
@@ -171,20 +188,126 @@
      ((eq? x 'x) ox)
      (else o^))))
 
-(define value-prefix
+
+(define value
   (lambda (nexp)
     (cond
      ((atom? nexp) nexp)
-     ((eq? (operator nexp) '+)
-      (o+
-       (value-prefix (1st-sub-exp nexp))
-       (value-prefix (2st-sub-exp nexp))))
-     ((eq? (operator nexp) 'x)
-      (ox (value-prefix (1st-sub-exp nexp)) (value-prefix (2st-sub-exp nexp))))
-     ((eq? (operator nexp) '^)
-      (o^ (value-prefix (1st-sub-exp nexp)) (value-prefix (2st-sub-exp nexp))))
+     (else ((atom-to-function (operator nexp))
+            (value (1st-sub-exp nexp))
+            (value (2nd-sub-exp nexp)))))))
+
+(value '13)
+(value '(+ 1 3))
+(value '(+ 1 (^ 3 4)))
+
+(define multirember-f
+  (lambda (test?)
+    (lambda (a l)
+      (cond
+       ((null? l) '())
+       ((test? (car l) a)
+        ((multirember-f test?) a (cdr l)))
+       (else (cons (car l)
+                   ((multirember-f test?) a (cdr l))))))))
+
+(define multirember-eq? (multirember-f eq?))
+
+(define eq-3? (eq?-c '3))
+
+(multirember-eq? '3 '(1 2 3 4 3 5 6))
+
+(define multirember-T
+  (lambda (eq?-a l)
+    (cond
+     ((null? l) '())
+     ((eq?-a (car l))
+      (multirember-T eq?-a (cdr l)))
+     (else (cons (car l)
+                 (multirember-T eq?-a (cdr l)))))))
+
+(multirember-T eq-3? '(1 2 3 4 3 5))
+
+;; 理解了这个，从能初步理解递归
+
+(define multirember&co
+  (lambda (a lat col)
+    (cond
+     ((null? lat) (col '() '()))
+     ((eq? (car lat) a)
+      (multirember&co a
+                      (cdr lat)
+                      (lambda (newlat seen)
+                        (col newlat
+                             (cons (car lat) seen)))))
+     (else
+      (multirember&co a
+                      (cdr lat)
+                      (lambda (newlat seen)
+                        (col (cons (car lat) newlat)
+                             seen)))))))
+
+(define a-friend
+  (lambda (x y)
+    (null? y)))
+
+(multirember&co 'tuna '(strawberries tuna and swordfish) a-friend)
+
+(multirember&co 'tuna '() a-friend)
+
+(multirember&co 'tuna '(tuna) a-friend)
+
+(multirember&co 'tuna '(and tuna) a-friend)
+
+(define multiinsertLR
+  (lambda (new oldL oldR lat)
+    (cond
+     ((null? lat) '())
+     ((eq? (car lat) oldL)
+      (cons new (cons oldL (multiinsertLR new oldL oldR (cdr lat)))))
+     ((eq? (car lat) oldR)
+      (cons oldR (cons new (multiinsertLR new oldL oldR (cdr lat)))))
+     (else
+      (cons (car lat) (multiinsertLR new oldL oldR (cdr lat))))
      )))
 
-(value-prefix '13)
-(value-prefix '(+ 1 3))
-(value-prefix '(+ 1 (^ 3 4)))
+(multiinsertLR 'h '1 '2 '(1 3 5 7 2 4 6))
+
+(define multiinsertLR&co
+  (lambda (new oldL oldR lat col)
+    (cond
+     ((null? lat)
+      (col '() 0 0))
+     ((eq? (car lat) oldL)
+      (multirember&co
+       new
+       oldL
+       oldR
+       (cdr lat)
+       (lambda (newlat numberL numberR)
+         (col
+          (cons new (cons oldL newlat))
+          (+ numberL 1)
+          numberR))))
+     ((eq? (car lat) oldR)
+      (multirember&co
+       new
+       oldL
+       oldR
+       (cdr lat)
+       (lambda (newlat numberL numberR)
+         (col
+          (cons oldR (cons new newlat))
+          numberL
+          (+ numberR 1)))))
+     (else
+      (multirember&co
+       new
+       oldL
+       oldR
+       (cdr lat)
+       (lambda (newlat numberL numberR)
+         (col
+          (cons (car lat) newlat)
+          numberL
+          numberR)))))))

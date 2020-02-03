@@ -94,7 +94,7 @@
   (lambda (aexp)
     (car (cdr aexp))))
 
-(define 2st-sub-exp
+(define 2nd-sub-exp
   (lambda (aexp)
     (car (cdr (cdr aexp)))))
 
@@ -107,16 +107,17 @@
     (cond
      ((atom? nexp) nexp)
      ((eq? (operator nexp) '+)
-      (o+
-       (value-prefix (1st-sub-exp nexp))
-       (value-prefix (2st-sub-exp nexp))))
+      (o+ (value-prefix (1st-sub-exp nexp))
+          (value-prefix (2nd-sub-exp nexp))))
      ((eq? (operator nexp) 'x)
-      (ox (value-prefix (1st-sub-exp nexp)) (value-prefix (2st-sub-exp nexp))))
+      (ox (value-prefix (1st-sub-exp nexp))
+          (value-prefix (2nd-sub-exp nexp))))
      ((eq? (operator nexp) '^)
-      (o^ (value-prefix (1st-sub-exp nexp)) (value-prefix (2st-sub-exp nexp))))
-     )))
+      (o^ (value-prefix (1st-sub-exp nexp))
+          (value-prefix (2nd-sub-exp nexp))))
+     (else #f))))
 
-(value-prefix1 '13)
-(value-prefix1 '(+ 1 3))
-(value-prefix1 '(+ 1 (^ 3 4)))
+(value-prefix '13)
+(value-prefix '(+ 1 3))
+(value-prefix '(+ 1 (^ 3 4)))
 

@@ -345,29 +345,41 @@
   (lambda (p)
     (car (cdr (cdr p)))))
 
-(define cons-pairs
-  (lambda (l1 l2)
-    (build
-     (cons (first l1) (first l2))
-     (build
-      (* (second l1) (second l2))
-      (+ (third l1) (third l2))))))
-
-(define even-only*&co
+(define evens-only*&co
   (lambda (l col)
     (cond
-     ((null? l) '(() 1 0))
+     ((null? l) (col '() 1 0))
      ((atom? (car l))
       (cond
        ((even? (car l))
-        (even-only*&co (cdr l)
-                       (lambda (newlat p s)
-                         (col (cons (car l) newlat) (* (car l) p) s))))
+        (evens-only*&co
+         (cdr l)
+         (lambda (newlat p s)
+           (col (cons (car l) newlat) (* (car l) p) s))))
        (else
-        (even-only*&co (cdr l)
-                       (lambda (newlat p s)
-                         (col newlat p (+ (car l) s)))))))
-     (else
-      (cons-pairs (even-only*&co (car l)
-                                 (lambda (newlat p s)
-                                   (col)))))))
+        (evens-only*&co
+         (cdr l)
+         (lambda (newlat p s)
+           (col newlat p (+ (car l) s)))))))
+     (else (evens-only*&co
+            (car l)
+            (lambda (al ap as)
+              (evens-only*&co
+               (cdr l)
+               (lambda (dl dp ds)
+                 (col (cons al dl)
+                       (* ap dp)
+                       (+ as ds))))))))))
+
+(define the-last-friend
+  (lambda (newl product sum)
+    (cons sum
+          (cons product
+                newl))))
+
+(evens-only*&co '((9 1 2 8) 3 10 ((9 9) 7 6) 2) the-last-friend)
+
+(define evens-friend
+  (lambda (e p s) e))
+
+(evens-only*&co '((9 1 2 8) 3 10 ((9 9) 7 6) 2) evens-friend)

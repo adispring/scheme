@@ -1,3 +1,7 @@
+(define atom?
+  (lambda (x)
+    (and (not (pair? x)) (not (null? x)))))
+
 (define rember-f
   (lambda (test? a l)
     (cond
@@ -144,6 +148,12 @@
      ((zero? m) 0)
      (else (o+ n (ox n (sub1 m)))))))
 
+(define o/
+  (lambda (m n)
+    (cond
+     ((o< m n) 0)
+     (else (add1 (div (o- m n) n))))))
+
 (define o^
   (lambda (m n)
     (cond
@@ -279,35 +289,85 @@
      ((null? lat)
       (col '() 0 0))
      ((eq? (car lat) oldL)
-      (multirember&co
-       new
-       oldL
-       oldR
+      (multirember&co new oldL oldR
        (cdr lat)
-       (lambda (newlat numberL numberR)
-         (col
-          (cons new (cons oldL newlat))
-          (+ numberL 1)
-          numberR))))
+       (lambda (newlat L R)
+         (col (cons new (cons oldL newlat)) (+ L 1) R))))
      ((eq? (car lat) oldR)
-      (multirember&co
-       new
-       oldL
-       oldR
+      (multirember&co new oldL oldR
        (cdr lat)
-       (lambda (newlat numberL numberR)
-         (col
-          (cons oldR (cons new newlat))
-          numberL
-          (+ numberR 1)))))
+       (lambda (newlat L R)
+         (col (cons oldR (cons new newlat)) L (+ R 1)))))
      (else
-      (multirember&co
-       new
-       oldL
-       oldR
+      (multirember&co new oldL oldR
        (cdr lat)
-       (lambda (newlat numberL numberR)
-         (col
-          (cons (car lat) newlat)
-          numberL
-          numberR)))))))
+       (lambda (newlat L R)
+         (col (cons (car lat) newlat) L R)))))))
+
+
+(multiinsertLR&co 'salty 'fish 'chips '(chips and fish or fish and chips) )
+
+
+
+(define even?
+  (lambda (n)
+    (= (* (o/ n 2) 2) n)))
+
+(define even-only*
+  (lambda (l)
+    (cond
+     ((null? l) '())
+     ((atom? (car l))
+      (cond
+       ((even? (car l)) (cons (car l) (even-only* (cdr l))))
+       (else (even-only* (cdr l)))))
+     (else (cons (even-only* (car l)) (even-only* (cdr l)))))))
+
+(even-only* '((1 2 3) 4 5 (6 (7 8) 9 10)))
+
+(even? 3)
+
+(o/ 3 2)
+
+(define first
+  (lambda (p)
+    (car p)))
+
+(define second
+  (lambda (p)
+    (car (cdr p))))
+
+(define build
+  (lambda (s1 s2)
+    (cons s1 (cons s2 '()))))
+
+(define third
+  (lambda (p)
+    (car (cdr (cdr p)))))
+
+(define cons-pairs
+  (lambda (l1 l2)
+    (build
+     (cons (first l1) (first l2))
+     (build
+      (* (second l1) (second l2))
+      (+ (third l1) (third l2))))))
+
+(define even-only*&co
+  (lambda (l col)
+    (cond
+     ((null? l) '(() 1 0))
+     ((atom? (car l))
+      (cond
+       ((even? (car l))
+        (even-only*&co (cdr l)
+                       (lambda (newlat p s)
+                         (col (cons (car l) newlat) (* (car l) p) s))))
+       (else
+        (even-only*&co (cdr l)
+                       (lambda (newlat p s)
+                         (col newlat p (+ (car l) s)))))))
+     (else
+      (cons-pairs (even-only*&co (car l)
+                                 (lambda (newlat p s)
+                                   (col)))))))

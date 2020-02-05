@@ -255,5 +255,76 @@
     (mk-length mk-length))
    ))
 
+((lambda (le)
+   ((lambda (mk-length)
+      (mk-length mk-length))
+    (lambda (mk-length)
+      (le (lambda (x)
+            ((mk-length mk-length) x))))))
+ (lambda (length)
+   (lambda (l)
+     (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l))))))))
 
+                                        ; Y
+                                        ;
+(lambda (le)
+  ((lambda (mk-length)
+     (mk-length mk-length))
+   (lambda (mk-length)
+     (le (lambda (x)
+           ((mk-length mk-length) x))))))
 
+                                        ; it is called the applicative-order Y combinator.
+                                        ;
+(define Y
+  (lambda (le)
+    ((lambda (f) (f f))
+     (lambda (f)
+       (le (lambda (x) ((f f) x)))))))
+
+(define Y
+  (lambda (le)
+    ((lambda (f) (le (f f)))
+     (lambda (f) (le (f f))))))
+
+((Y (lambda (sum)
+      (lambda (n)
+        (cond
+         ((eq? sum 0) 0)
+         (else (+ n (sum (sub1 n)))))))) 10)
+
+(Y (lambda (sum)
+     (lambda (n)
+       (cond
+        ((eq? sum 0) 0)
+        (else (add1 (sum (sub1 n))))))))
+
+((lambda (f) (f f))
+ (lambda (fact)
+   (lambda (n)
+     (cond
+      ((= 0 n) 1)
+      (else (* n (fact (- n 1))))))))
+
+((Y
+  (lambda (fact)
+    (lambda (n)
+      (cond
+       ((= 0 n) 1)
+       (else (* n (fact (- n 1)))))))) 4)
+
+((Y
+  (lambda (sum)
+    (lambda (n)
+      (cond
+       ((eq? n 0) 0)
+       (else (+ n (sum (sub1 n)))))))) 10)
+
+((Y
+  (lambda (fact)
+    (lambda (n)
+      (cond
+       ((= 0 n) 0)
+       (else (+ n (fact (- n 1)))))))) 4)
